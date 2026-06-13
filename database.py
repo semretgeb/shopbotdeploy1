@@ -1,0 +1,97 @@
+import sqlite3
+
+DB_NAME = "shopbot.db"
+
+def init_db():
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS shops (
+        owner_id TEXT PRIMARY KEY,
+        shop_name TEXT,
+        delivery_info TEXT,
+        payment_methods TEXT
+    )''')
+    c.execute('''CREATE TABLE IF NOT EXISTS products (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        owner_id TEXT,
+        name TEXT,
+        price TEXT,
+        description TEXT
+    )''')
+    c.execute('''CREATE TABLE IF NOT EXISTS conversations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        customer_id TEXT,
+        owner_id TEXT,
+        role TEXT,
+        message TEXT,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+    )''')
+    conn.commit()
+    conn.close()
+
+def save_shop(owner_id, shop_name, delivery, payment):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute('''INSERT OR REPLACE INTO shops 
+                 VALUES (?,?,?,?)''',
+              (owner_id, shop_name, delivery, payment))
+    conn.commit()
+    conn.close()
+
+def add_product(owner_id, name, price, description):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute('''INSERT INTO products 
+                 (owner_id, name, price, description)
+                 VALUES (?,?,?,?)''',
+              (owner_id, name, price, description))
+    conn.commit()
+    conn.close()
+
+def get_shop_context(owner_id):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("SELECT * FROM shops WHERE owner_id=?", (owner_id,))
+    shop = c.fetchone()
+    c.execute("SELECT name, price, description FROM products WHERE owner_id=?", (owner_id,))
+    products = c.fetchall()
+    conn.close()
+    return shop, products
+
+def save_message(customer_id, owner_id, role, message):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute('''INSERT INTO conversations 
+                 (customer_id, owner_id, role, message)
+                 VALUES (?,?,?,?)''',
+              (customer_id, owner_id, role, message))
+    conn.commit()
+    conn.close()
+
+def get_conversation_history(customer_id, owner_id, limit=10):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute('''SELECT role, message FROM conversations 
+                 WHERE customer_id=? AND owner_id=?
+                 ORDER BY timestamp DESC LIMIT ?''',
+              (customer_id, owner_id, limit))
+    rows = c.fetchall()
+    conn.close()
+    rows.reverse()
+    return [{"role": row[0], "content": row[1]} for row in rows]
+
+def shop_exists(owner_id):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("SELECT shop_name FROM shops WHERE owner_id=?", (owner_id,))
+    result = c.fetchone()
+    conn.close()
+    return result is not None
+
+def delete_shop(owner_id):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("DELETE FROM shops WHERE owner_id=?", (owner_id,))
+    c.execute("DELETE FROM products WHERE owner_id=?", (owner_id,))
+    conn.commit()
+    conn.close()
