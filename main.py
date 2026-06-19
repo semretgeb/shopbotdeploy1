@@ -1,5 +1,7 @@
 import os
-import asyncio 
+import asyncio
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
 from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import (
@@ -22,6 +24,21 @@ from chat_handler import handle_customer_message
 load_dotenv()
 
 OWNER_ID = os.getenv("OWNER_TELEGRAM_ID")
+
+# ── Tiny health server so Render sees an open port ─────────────
+class HealthHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"ShopBot is running!")
+
+    def log_message(self, format, *args):
+        pass  # silence default request logging
+
+def run_health_server():
+    port = int(os.environ.get("PORT", 8080))
+    server = HTTPServer(("0.0.0.0", port), HealthHandler)
+    server.serve_forever()
 
 # ── Commands ─────────────────────────────────────────────────
 async def start_command(update: Update, context):
@@ -88,6 +105,10 @@ def main():
     # Initialize database
     init_db()
     print("✅ Database ready")
+
+    # Start tiny health server in background thread so Render detects an open port
+    threading.Thread(target=run_health_server, daemon=True).start()
+    print("✅ Health server started")
 
     # Build app
     token = os.getenv("TELEGRAM_TOKEN")
