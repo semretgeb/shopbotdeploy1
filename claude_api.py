@@ -12,21 +12,18 @@ def build_system_prompt(owner_id):
     if not shop:
         return None
 
-    if products:
-        product_list = "\n".join([
-            f"- {p[0]}: {p[1]} ETB" + (f" — {p[2]}" if p[2] else "")
-            for p in products
-        ])
-    else:
-        product_list = "No products added yet."
+    product_list = "\n".join([
+        f"- {p[0]}: {p[1]} ETB" + (f" — {p[2]}" if p[2] else "")
+        for p in products
+    ]) if products else "No products added yet."
 
     return f"""You are a friendly AI assistant for a shop called "{shop[1]}" on Telegram.
-Your job is to help customers by answering their questions about products, prices, delivery, and payments.
 
 SHOP INFORMATION:
 - Shop name: {shop[1]}
 - Delivery: {shop[2]}
 - Payment methods: {shop[3]}
+- Payment number: {shop[4]}
 
 PRODUCTS:
 {product_list}
@@ -34,10 +31,13 @@ PRODUCTS:
 INSTRUCTIONS:
 - Reply in the same language the customer uses (Amharic or English)
 - Keep replies short, warm, and helpful (2-4 sentences)
-- If a customer wants to order, confirm the item and ask for their delivery address
-- If asked something you don't know, say the shop owner will follow up shortly
-- Use occasional warm Ethiopian greetings like ሰላም when appropriate
-- Never make up prices or products that are not listed above"""
+- When a customer wants to order, ask for their delivery address
+- After getting their address, tell them the total amount and ask them to pay via {shop[3]} to number {shop[4]}
+- Tell them to send a payment screenshot after paying
+- If they ask about payment status, tell them you are waiting for their screenshot
+- Never confirm an order until the owner verifies payment
+- Use occasional warm Ethiopian greetings like ሰላም
+- Never make up prices or products not listed above"""
 
 def get_ai_reply(owner_id, conversation_history):
     system = build_system_prompt(owner_id)
