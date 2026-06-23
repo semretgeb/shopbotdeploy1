@@ -46,7 +46,7 @@ async def get_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data['payment'] = update.message.text
     await update.message.reply_text(
         "What is your payment phone number?\n"
-        "_e.g. 0912345678 (Telebirr or CBE number customers will send money to)_",
+        "_e.g. 0912345678 — customers will send money to this number_",
         parse_mode='Markdown'
     )
     return PAYMENT_NUMBER
@@ -80,13 +80,14 @@ async def get_product_price(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return PRODUCT_DESC
 
 async def get_product_desc(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    desc = update.message.text
+    desc = update.message.text.strip()
     if desc.upper() == 'SKIP':
         desc = ''
 
     owner_id = str(update.effective_user.id)
     p = context.user_data['current_product']
 
+    # Save shop info on first product
     if 'shop_saved' not in context.user_data:
         save_shop(
             owner_id,
@@ -101,34 +102,43 @@ async def get_product_desc(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(
         f"✅ *{p['name']}* added — {p['price']} ETB\n\n"
-        "Add another product or type *DONE* to finish.",
+        "Type the next product name to add another,\n"
+        "or type *DONE* to finish setup.",
         parse_mode='Markdown'
     )
     return MORE_PRODUCTS
 
 async def more_products(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.message.text.upper() == 'DONE':
+    text = update.message.text.strip().upper()
+
+    if text == 'DONE':
         shop_name = context.user_data.get('shop_name', 'your shop')
         await update.message.reply_text(
             f"🎉 *{shop_name}* is now live!\n\n"
-            "Your AI assistant is ready to reply to customers 24/7.\n\n"
+            "Your AI assistant is ready to reply to customers 24/7 "
+            "in Amharic and English.\n\n"
             "Commands:\n"
-            "/myshop — View your shop\n"
+            "/myshop — View your shop details\n"
             "/orders — View pending orders\n"
-            "/resetshop — Reset shop",
+            "/resetshop — Reset and start over",
             parse_mode='Markdown'
         )
         context.user_data.clear()
         return ConversationHandler.END
     else:
-        context.user_data['current_product'] = {'name': update.message.text}
+        # Treat anything that is not DONE as a new product name
+        context.user_data['current_product'] = {'name': update.message.text.strip()}
         await update.message.reply_text(
-            f"Product: *{update.message.text}*\n\nWhat is the price in ETB?",
+            f"Product: *{update.message.text.strip()}*\n\n"
+            "What is the price in ETB?\n"
+            "_e.g. 500 or 400–800_",
             parse_mode='Markdown'
         )
         return PRODUCT_PRICE
 
 async def cancel_setup(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data.clear()
-    await update.message.reply_text("Setup cancelled. Type /setup to start again.")
+    await update.message.reply_text(
+        "Setup cancelled. Type /setup to start again anytime."
+    )
     return ConversationHandler.END
