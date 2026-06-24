@@ -1,7 +1,5 @@
 import os
 import asyncio
-import threading
-from http.server import HTTPServer, BaseHTTPRequestHandler
 from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import (
@@ -23,20 +21,9 @@ from chat_handler import handle_customer_message
 
 load_dotenv()
 OWNER_ID = os.getenv("OWNER_TELEGRAM_ID")
-
-# ── Health server for Render ──────────────────────────────────
-class HealthHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.end_headers()
-        self.wfile.write(b"ShopBot is running!")
-    def log_message(self, format, *args):
-        pass
-
-def run_health_server():
-    port = int(os.environ.get("PORT", 8080))
-    server = HTTPServer(("0.0.0.0", port), HealthHandler)
-    server.serve_forever()
+TOKEN = os.getenv("TELEGRAM_TOKEN")
+RENDER_URL = os.getenv("RENDER_URL")  # e.g. https://shopbot-a8wy.onrender.com
+PORT = int(os.environ.get("PORT", 8080))
 
 # ── Commands ──────────────────────────────────────────────────
 async def start_command(update: Update, context):
@@ -89,8 +76,7 @@ async def orders_command(update: Update, context):
                 f"👤 {o[2]} (ID: {o[1]})\n"
                 f"📦 {o[4]}\n"
                 f"📍 {o[6]}\n"
-                f"To approve: `/approve {o[0]}`\n"
-                f"To reject: `/reject {o[0]}`\n\n")
+                f"✅ `/approve {o[0]}`  ❌ `/reject {o[0]}`\n\n")
     await update.message.reply_text(msg, parse_mode='Markdown')
 
 async def approve_command(update: Update, context):
@@ -106,7 +92,6 @@ async def approve_command(update: Update, context):
         await update.message.reply_text("Order not found.")
         return
     update_order_status(order_id, "confirmed")
-    # Notify customer
     await context.bot.send_message(
         chat_id=order[1],
         text="✅ *Your payment has been verified!*\n\n"
@@ -128,7 +113,6 @@ async def reject_command(update: Update, context):
         await update.message.reply_text("Order not found.")
         return
     update_order_status(order_id, "rejected")
-    # Notify customer
     await context.bot.send_message(
         chat_id=order[1],
         text="❌ *We could not verify your payment.*\n\n"
@@ -150,15 +134,7 @@ def main():
     init_db()
     print("✅ Database ready")
 
-    threading.Thread(target=run_health_server, daemon=True).start()
-    print("✅ Health server started")
-
-    token = os.getenv("TELEGRAM_TOKEN")
-    if not token:
-        print("❌ TELEGRAM_TOKEN not found in .env")
-        return
-
-    app = Application.builder().token(token).connect_timeout(30).read_timeout(30).write_timeout(30).build()
+    app = Application.builder().token(TOKEN).build()
 
     setup_handler = ConversationHandler(
         entry_points=[CommandHandler("setup", start_setup)],
@@ -184,9 +160,20 @@ def main():
     app.add_handler(setup_handler)
     app.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND, handle_customer_message))
 
-    print("🤖 ShopBot is running!")
-    app.run_polling()
+    if RENDER_URL:
+        # Webhook mode for Render
+        print(f"🌐 Starting webhook on port {PORT}")
+        app.run_webhook(
+            listen="0.0.0.0",
+            port=PORT,
+            url_path=TOKEN,
+            webhook_url=f"{RENDER_URL}/{TOKEN}"
+        )
+    else:
+        # Polling mode for local development
+        print("🤖 ShopBot is running in polling mode!")
+        asyncio.set_event_loop(asyncio.new_event_loop())
+        app.run_polling()
 
 if __name__ == "__main__":
-    asyncio.set_event_loop(asyncio.new_event_loop())
     main()
