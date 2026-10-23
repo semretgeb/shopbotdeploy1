@@ -1,7 +1,9 @@
 """/start, deep links, language picker, owner home, shop settings, customer shop home (stub)."""
+import html
 import re
 
 from telegram import Update
+from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
 
 from app.bot import states as S
@@ -59,7 +61,20 @@ async def show_entry(ctx: Ctx) -> None:
 async def start_cb(ctx: Ctx) -> None:
     await ctx.answer()
     if arg(ctx, 1) == "customer":
-        await ctx.render(ctx.t("start.customer_hint", bot=get_settings().BOT_USERNAME), kb([nav_row(ctx.lang, home=True)]))
+        # HTML parse mode: BOT_USERNAME often contains "_" which would break legacy Markdown parsing.
+        q = ctx.update.callback_query
+        if q and q.message:
+            try:
+                await q.message.delete()
+            except Exception:
+                pass
+        await ctx.tg.bot.send_message(
+            ctx.chat_id,
+            ctx.t("start.customer_hint", bot=html.escape(get_settings().BOT_USERNAME)),
+            reply_markup=kb([nav_row(ctx.lang, home=True)]),
+            parse_mode=ParseMode.HTML,
+            disable_web_page_preview=True,
+        )
 
 
 # --- language ---------------------------------------------------------------
