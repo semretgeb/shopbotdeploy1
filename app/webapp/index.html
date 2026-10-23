@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="am">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="color-scheme" content="light dark">
+  <title>Mini Shop</title>
+  <link rel="stylesheet" href="css/app.css">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+  <header id="header" class="header">
+    <div class="header-row">
+      <h1 id="shop-name" class="shop-name skeleton-text">&nbsp;</h1>
+      <div class="header-actions">
+        <button id="btn-orders" class="icon-btn" aria-label="My orders" hidden>🧾</button>
+        <button id="btn-lang" class="icon-btn lang-btn" aria-label="Language">EN</button>
+      </div>
+    </div>
+    <p id="shop-desc" class="shop-desc"></p>
+  </header>
+
+  <main id="view" class="view" aria-live="polite"></main>
+
+  <div id="cart-bar" class="cart-bar" hidden>
+    <span id="cart-bar-text"></span>
+    <span class="cart-bar-cta" id="cart-bar-cta"></span>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <!-- Templates -->
+  <template id="tpl-skeleton">
+    <div class="grid">
+      <div class="card skeleton"></div><div class="card skeleton"></div>
+      <div class="card skeleton"></div><div class="card skeleton"></div>
+      <div class="card skeleton"></div><div class="card skeleton"></div>
+    </div>
+  </template>
+
+  <script src="js/i18n.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

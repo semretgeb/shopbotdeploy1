@@ -1,18 +1,13 @@
 """Builds the python-telegram-bot Application in webhook mode (no Updater, no polling)."""
 import logging
 
-from telegram import Update
-from telegram.ext import Application, ApplicationBuilder, CommandHandler, ContextTypes
+from telegram.ext import Application, ApplicationBuilder, CallbackQueryHandler, CommandHandler, ContextTypes, MessageHandler, filters
 
+from app.bot import router
+from app.bot.handlers import admin, assistant, onboarding, orders_owner, products, share, shop_customer, start, subscription  # noqa: F401  (registers @on_state/@on_callback)
 from app.config import get_settings
 
 log = logging.getLogger(__name__)
-
-
-async def _ping(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Part 1 smoke test. Replaced by the real /start in Part 2."""
-    if update.effective_message:
-        await update.effective_message.reply_text("ShopBot core is alive ✅")
 
 
 async def _on_error(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -34,6 +29,8 @@ def build_application() -> Application:
 
 
 def register_handlers(app: Application) -> None:
-    # Part 2+ will import handler modules here. Keep this the single registration point.
-    app.add_handler(CommandHandler("ping", _ping))
-    app.add_handler(CommandHandler("start", _ping))
+    # Commands first, then every button press, then every other private-chat message.
+    app.add_handler(CommandHandler("start", start.start_command))
+    app.add_handler(CommandHandler("admin", admin.admin_command))
+    app.add_handler(CallbackQueryHandler(router.handle_callback))
+    app.add_handler(MessageHandler(filters.ChatType.PRIVATE & ~filters.COMMAND, router.handle_message))

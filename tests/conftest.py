@@ -9,6 +9,7 @@ os.environ.setdefault("ADMIN_TELEGRAM_ID", "999")
 os.environ.setdefault("DATABASE_URL", "sqlite:///./test_shopbot.db")
 os.environ.setdefault("IMAGE_CACHE_DIR", "/tmp/shopbot-test-img")
 os.environ.setdefault("ENV", "test")
+os.environ["GROQ_API_KEY"] = ""  # never call Groq from tests, even if .env has a key
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
