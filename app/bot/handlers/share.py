@@ -1,4 +1,6 @@
 """Shop link + QR code for sharing."""
+import html
+
 from telegram import CopyTextButton
 from telegram.constants import ParseMode
 
@@ -25,11 +27,12 @@ async def share_cb(ctx: Ctx) -> None:
             await q.message.delete()
         except Exception:
             pass
+    # HTML parse mode: URLs with "_" (e.g. "yene_sukbot") would break legacy Markdown parsing.
     await ctx.tg.bot.send_photo(
         ctx.chat_id,
         qr_png(link),
-        caption=ctx.t("share.text", link=link),
-        parse_mode=ParseMode.MARKDOWN,
+        caption=ctx.t("share.text", link=html.escape(link)),
+        parse_mode=ParseMode.HTML,
         reply_markup=kb([
             [Btn(ctx.t("share.copy"), copy_text=CopyTextButton(link))],
             [Btn(ctx.t("share.forward"), callback_data="share:forward")],
@@ -42,5 +45,9 @@ async def send_customer_message(ctx: Ctx) -> None:
     """A clean message with only the link, meant to be forwarded to customers."""
     shop = ctx.owner_shop
     link = shop_link(get_settings().BOT_USERNAME, shop.slug)
-    await ctx.send(ctx.t("share.customer_msg", shop=shop.name, link=link))
-
+    await ctx.tg.bot.send_message(
+        ctx.chat_id,
+        ctx.t("share.customer_msg", shop=html.escape(shop.name), link=html.escape(link)),
+        parse_mode=ParseMode.HTML,
+        disable_web_page_preview=True,
+    )
