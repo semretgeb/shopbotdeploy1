@@ -31,7 +31,7 @@
   "onb.phone_invalid": "That doesn't look like a phone number. Example: 0911223344",
   "onb.delivery": "🚚 {step}\n\nDelivery info: areas you deliver to, fee, and how long it takes.\nExample: Addis Ababa only, 100 birr, same day.",
   "onb.payment": "💳 {step}\n\nHow should customers pay you? Send your Telebirr / CBE Birr / bank details.\nExample: Telebirr 0911223344 (Abebe K.)",
-  "onb.done": "🎉 Your shop *{shop}* is ready!\n\n🔗 Your shop link:\n{link}\n\n🆓 Free trial until {date}.\n\nNext: add your first product.",
+  "onb.done": "🎉 Your shop <b>{shop}</b> is ready!\n\n🔗 Your shop link:\n{link}\n\n🆓 Free trial until {date}.\n\nNext: add your first product.",
   "onb.resume": "👋 Let's finish setting up your shop.",
   "home.title": "🏪 *{shop}*\n📦 Products: {products}   🧾 New orders: {orders}\n{status}",
   "home.status_trial": "🆓 Trial · {days} days left",

@@ -1,5 +1,8 @@
 """Owner onboarding wizard: name -> description -> phone -> delivery -> payment (5 steps)."""
+import html
 import re
+
+from telegram.constants import ParseMode
 
 from app.bot import states as S
 from app.bot.context import Ctx
@@ -132,7 +135,13 @@ async def finish(ctx: Ctx) -> None:
     shop.onboarding_done = True
     ctx.db.flush()
     link = shop_link(get_settings().BOT_USERNAME, shop.slug)
-    await ctx.send(ctx.t("onb.done", shop=shop.name, link=link, date=shop.trial_ends_at.strftime("%d %b %Y")))
+    # HTML parse mode: the shop link contains "_" (yene_sukbot) which breaks legacy Markdown.
+    await ctx.tg.bot.send_message(
+        ctx.chat_id,
+        ctx.t("onb.done", shop=html.escape(shop.name), link=html.escape(link), date=shop.trial_ends_at.strftime("%d %b %Y")),
+        parse_mode=ParseMode.HTML,
+        disable_web_page_preview=True,
+    )
     from app.bot.handlers.admin import notify_admin_new_shop
     await notify_admin_new_shop(ctx.tg.bot, shop)
     await owner_home(ctx)
