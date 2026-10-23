@@ -61,7 +61,7 @@
   "prod.category_name": "🏷 የአዲሱን ምድብ ስም ይላኩ:",
   "prod.category_invalid": "የምድብ ስም ከ2 እስከ 48 ፊደላት መሆን አለበት።",
   "prod.preview": "👀 *ቅድመ እይታ*\n\n*{name}*\n💰 {price}\n📦 {stock}\n🏷 {category}\n\nይህን ምርት ላስቀምጥ?",
-  "prod.saved": "✅ *{name}* ተቀምጧል!",
+  "prod.saved": "✅ <b>{name}</b> ተቀምጧል!",
   "prod.add_another": "➕ ሌላ ጨምር",
   "prod.list_title": "📦 *ምርቶች* ({n})\n\nለማየት ወይም ለማስተካከል ምርቱን ይጫኑ።",
   "prod.list_empty": "📦 እስካሁን ምርት የለም።\n\n*➕ ምርት ጨምር* ን ተጭነው የመጀመሪያውን ይጨምሩ — 30 ሰከንድ ብቻ ይወስዳል።",

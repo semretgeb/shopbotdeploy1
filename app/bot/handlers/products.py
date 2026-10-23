@@ -1,6 +1,9 @@
 """Product management in chat: add (photo first), list, view, edit, delete, hide/show."""
+import html
 import re
 from typing import Optional
+
+from telegram.constants import ParseMode
 
 from app.bot import states as S
 from app.bot.context import Ctx
@@ -311,10 +314,26 @@ async def prod_wizard_cb(ctx: Ctx) -> None:
             category_id=d.get("category_id"),
         )
         ctx.reset()
-        await ctx.answer(ctx.t("prod.saved", name=p.name))
-        await ctx.render(
-            ctx.t("prod.saved", name=p.name),
-            kb([[Btn(ctx.t("prod.add_another"), callback_data="prod:add"), Btn(ctx.t("home.products", n=repo.count(ctx.db, ctx.owner_shop.id)), callback_data="prod:list:0")], nav_row(ctx.lang)]),
+        # Callback-query answers are plain text (no entity parsing), so pass the name without any markup.
+        await ctx.answer(f"✅ {p.name}")
+        # Preview is a photo message; delete it then send a fresh text message in HTML mode
+        # so names containing "_" or "*" don't crash legacy Markdown parsing.
+        q = ctx.update.callback_query
+        if q and q.message:
+            try:
+                await q.message.delete()
+            except Exception:
+                pass
+        await ctx.tg.bot.send_message(
+            ctx.chat_id,
+            ctx.t("prod.saved", name=html.escape(p.name)),
+            reply_markup=kb([
+                [Btn(ctx.t("prod.add_another"), callback_data="prod:add"),
+                 Btn(ctx.t("home.products", n=repo.count(ctx.db, ctx.owner_shop.id)), callback_data="prod:list:0")],
+                nav_row(ctx.lang),
+            ]),
+            parse_mode=ParseMode.HTML,
+            disable_web_page_preview=True,
         )
     else:
         await ctx.answer()

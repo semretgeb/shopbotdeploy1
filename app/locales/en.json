@@ -61,7 +61,7 @@
   "prod.category_name": "🏷 Send the new category name:",
   "prod.category_invalid": "Category name must be 2–48 characters.",
   "prod.preview": "👀 *Preview*\n\n*{name}*\n💰 {price}\n📦 {stock}\n🏷 {category}\n\nSave this product?",
-  "prod.saved": "✅ *{name}* saved!",
+  "prod.saved": "✅ <b>{name}</b> saved!",
   "prod.add_another": "➕ Add another",
   "prod.list_title": "📦 *Products* ({n})\n\nTap a product to view or edit it.",
   "prod.list_empty": "📦 No products yet.\n\nTap *➕ Add product* to add your first one — it takes 30 seconds.",
