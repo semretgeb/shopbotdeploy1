@@ -4,7 +4,7 @@ import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from telegram import Update
@@ -83,6 +83,38 @@ async def _unhandled(request: Request, exc: Exception) -> JSONResponse:
 @app.get("/healthz", include_in_schema=False)
 async def healthz() -> dict:
     return {"ok": True}
+
+
+@app.get("/debug/webhook", include_in_schema=False)
+async def debug_webhook(request: Request, key: str = Query(...)) -> dict:
+    """Diagnose why Telegram isn't delivering updates. Guarded by WEBHOOK_SECRET.
+
+    Returns the bot's username, the webhook URL Telegram actually has registered vs the one we
+    expect, pending update count, and Telegram's last_error_message so webhook/token/URL mismatches
+    are obvious without SSHing into the server.
+    """
+    s = get_settings()
+    if key != s.WEBHOOK_SECRET:
+        raise HTTPException(status_code=403, detail="forbidden")
+    bot = request.app.state.ptb.bot
+    try:
+        me = await bot.get_me()
+        info = await bot.get_webhook_info()
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"telegram unreachable: {e}")
+    return {
+        "bot_username": me.username,
+        "expected_webhook": s.webhook_url,
+        "registered_webhook": info.url,
+        "match": info.url == s.webhook_url,
+        "pending_update_count": info.pending_update_count,
+        "last_error_date": info.last_error_date.isoformat() if info.last_error_date else None,
+        "last_error_message": info.last_error_message,
+        "ip_address": info.ip_address,
+        "max_connections": info.max_connections,
+        "allowed_updates": info.allowed_updates,
+        "has_custom_certificate": info.has_custom_certificate,
+    }
 
 
 @app.get("/", include_in_schema=False)
