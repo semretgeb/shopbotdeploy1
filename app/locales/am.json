@@ -98,7 +98,7 @@
   "settings.prompt": "አዲሱን እሴት ይላኩ:",
   "settings.updated": "✅ ቅንብሮች ተስተካክለዋል።",
   "not_set": "— አልተሞላም —",
-  "customer.home": "🏪 *{shop}*\n{desc}\n\n📞 {phone}\n🚚 {delivery}",
+  "customer.home": "🏪 <b>{shop}</b>\n{desc}\n\n📞 {phone}\n🚚 {delivery}",
   "customer.open_shop": "🛍 ሱቁን ክፈት",
   "customer.browse": "📋 እዚህ ተመልከት",
   "customer.my_orders": "🧾 ትዕዛዞቼ",

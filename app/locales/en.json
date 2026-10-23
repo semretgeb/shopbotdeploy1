@@ -98,7 +98,7 @@
   "settings.prompt": "Send the new value:",
   "settings.updated": "✅ Settings updated.",
   "not_set": "— not set —",
-  "customer.home": "🏪 *{shop}*\n{desc}\n\n📞 {phone}\n🚚 {delivery}",
+  "customer.home": "🏪 <b>{shop}</b>\n{desc}\n\n📞 {phone}\n🚚 {delivery}",
   "customer.open_shop": "🛍 Open shop",
   "customer.browse": "📋 Browse here",
   "customer.my_orders": "🧾 My orders",

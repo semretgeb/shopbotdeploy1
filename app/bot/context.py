@@ -76,17 +76,17 @@ class Ctx:
 
     # --- output ------------------------------------------------------------
     async def send(self, text: str, kb: Optional[InlineKeyboardMarkup] = None, **kw) -> Message:
-        return await self.tg.bot.send_message(
-            self.chat_id, text, reply_markup=kb, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True, **kw
-        )
+        kw.setdefault("parse_mode", ParseMode.MARKDOWN)
+        kw.setdefault("disable_web_page_preview", True)
+        return await self.tg.bot.send_message(self.chat_id, text, reply_markup=kb, **kw)
 
-    async def render(self, text: str, kb: Optional[InlineKeyboardMarkup] = None) -> Optional[Message]:
+    async def render(self, text: str, kb: Optional[InlineKeyboardMarkup] = None, parse_mode=ParseMode.MARKDOWN) -> Optional[Message]:
         """Edit the message the button lives on when possible (UX rule: edit in place), else send."""
         q = self.update.callback_query
         if q and q.message and not q.message.photo:
             try:
                 return await q.edit_message_text(
-                    text, reply_markup=kb, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True
+                    text, reply_markup=kb, parse_mode=parse_mode, disable_web_page_preview=True
                 )
             except BadRequest as e:
                 if "not modified" in str(e).lower():
@@ -98,7 +98,7 @@ class Ctx:
                 await q.message.delete()
             except BadRequest:
                 pass
-        return await self.send(text, kb)
+        return await self.send(text, kb, parse_mode=parse_mode)
 
     async def send_photo(self, file_id: str, caption: str, kb: Optional[InlineKeyboardMarkup] = None) -> Message:
         return await self.tg.bot.send_photo(self.chat_id, file_id, caption=caption, reply_markup=kb, parse_mode=ParseMode.MARKDOWN)

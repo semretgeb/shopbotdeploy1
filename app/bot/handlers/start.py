@@ -242,7 +242,8 @@ async def open_shop_as_customer(ctx: Ctx, slug: str) -> None:
     lang_pending = ctx.data.get("lang_pending", False)
     ctx.set_state(S.IDLE, {"lang_pending": True} if lang_pending else {}, shop_id=shop.id)
     if not sub.is_shop_open(shop):
-        await ctx.send(ctx.t("start.shop_closed", shop=shop.name))
+        # HTML parse mode: shop.name may contain "_" or "*" which would crash legacy Markdown.
+        await ctx.send(ctx.t("start.shop_closed", shop=html.escape(shop.name)), parse_mode=ParseMode.HTML)
         return
     if lang_pending:
         await ctx.send(ctx.t("lang.pick"), lang_picker())
@@ -253,14 +254,21 @@ async def open_shop_as_customer(ctx: Ctx, slug: str) -> None:
 async def customer_home(ctx: Ctx, shop) -> None:
     s = get_settings()
     ns = ctx.t("not_set")
-    text = ctx.t("customer.home", shop=shop.name, desc=shop.description or "", phone=shop.phone or ns, delivery=shop.delivery_info or ns)
+    # HTML parse mode so shop.name/desc/phone/delivery with "_" or "*" don't crash the renderer.
+    text = ctx.t(
+        "customer.home",
+        shop=html.escape(shop.name),
+        desc=html.escape(shop.description or ""),
+        phone=html.escape(shop.phone or ns),
+        delivery=html.escape(shop.delivery_info or ns),
+    )
     rows = [
         [web_app_button(ctx.t("customer.open_shop"), f"{s.webapp_url}?shop={shop.slug}")],
         [Btn(ctx.t("customer.browse"), callback_data=f"cust:browse:0"), Btn(ctx.t("customer.my_orders"), callback_data="cust:orders")],
         [Btn(ctx.t("customer.ask"), callback_data="cust:ask"), Btn(ctx.t("customer.contact"), callback_data="cust:contact")],
         [Btn(ctx.t("btn.language"), callback_data="lang:pick")],
     ]
-    await ctx.render(text, kb(rows))
+    await ctx.render(text, kb(rows), parse_mode=ParseMode.HTML)
 
 
 # --- free text with no active state ----------------------------------------
