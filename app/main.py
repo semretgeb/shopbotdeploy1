@@ -28,14 +28,17 @@ async def lifespan(app: FastAPI):
     ptb = build_application()
     app.state.ptb = ptb
     await ptb.initialize()
-    await ptb.bot.set_webhook(
-        url=s.webhook_url,
-        secret_token=s.WEBHOOK_SECRET,
-        allowed_updates=[Update.MESSAGE, Update.CALLBACK_QUERY],
-        drop_pending_updates=s.ENV != "production",
-    )
+    try:
+        await ptb.bot.set_webhook(
+            url=s.webhook_url,
+            secret_token=s.WEBHOOK_SECRET,
+            allowed_updates=[Update.MESSAGE, Update.CALLBACK_QUERY],
+            drop_pending_updates=s.ENV != "production",
+        )
+        log.info("Webhook set to %s (env=%s, db=%s)", s.webhook_url, s.ENV, "sqlite" if s.is_sqlite else "postgres")
+    except Exception as e:  # keep the web server up so /healthz passes and the real error is visible in logs
+        log.error("COULD NOT SET WEBHOOK to %s: %s — check PUBLIC_URL (must be https://<public-domain>) and BOT_TOKEN", s.webhook_url, e)
     await ptb.start()
-    log.info("Webhook set to %s (env=%s, db=%s)", s.webhook_url, s.ENV, "sqlite" if s.is_sqlite else "postgres")
     expiry_task = asyncio.create_task(_expiry_loop(ptb.bot))
     try:
         yield
